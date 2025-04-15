@@ -1,0 +1,14 @@
+{
+  "name": "se_project_express",
+  "version": "0.1.0",
+  "description": "back-end for WTWR app",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Julian McNeill",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

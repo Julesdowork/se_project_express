@@ -31,13 +31,21 @@ const createClothingItem = (req, res) => {
 
 // DELETE /items/:itemId
 const deleteClothingItem = (req, res) => {
+  console.log(req.params.id);
   ClothingItem.findByIdAndDelete(req.params.id)
+    .orFail()
     .then((item) => {
       res.status(200).send({ data: item });
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).send({ message: err.message });
+      if (err.name === "CastError") {
+        res.status(400).send({ message: err.message });
+      } else if (err.name === "DocumentNotFoundError") {
+        res.status(404).send({ message: err.message });
+      } else {
+        res.status(500).send({ message: err.message });
+      }
     });
 };
 

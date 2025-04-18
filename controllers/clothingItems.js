@@ -36,7 +36,7 @@ const createClothingItem = (req, res) => {
 
 // DELETE /items/:id
 const deleteClothingItem = (req, res) => {
-  ClothingItem.findByIdAndDelete(req.params.id)
+  ClothingItem.findByIdAndDelete(req.params.itemId)
     .orFail()
     .then((item) => {
       res.status(200).send({ data: item });
@@ -54,7 +54,55 @@ const deleteClothingItem = (req, res) => {
 };
 
 // PUT /items/:id/likes
+const likeClothingItem = (req, res) => {
+  ClothingItem.findByIdAndUpdate(
+    req.params.itemId,
+    { $addToSet: { likes: req.user._id } },
+    { new: true }
+  )
+    .orFail()
+    .then((item) => {
+      res.status(200).send({ item });
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err.name === "CastError") {
+        res.status(INVALID_DATA_ERROR).send({ message: err.message });
+      } else if (err.name === "DocumentNotFoundError") {
+        res.status(NO_DOCUMENT_FOUND_ERROR).send({ message: err.message });
+      } else {
+        res.status(DEFAULT_ERROR).send({ message: err.message });
+      }
+    });
+};
 
 // DELETE /items/:id/likes
+const dislikeClothingItem = (req, res) => {
+  ClothingItem.findByIdAndUpdate(
+    req.params.itemId,
+    { $pull: { likes: req.user._id } },
+    { new: true }
+  )
+    .orFail()
+    .then((item) => {
+      res.status(200).send({ item });
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err.name === "CastError") {
+        res.status(INVALID_DATA_ERROR).send({ message: err.message });
+      } else if (err.name === "DocumentNotFoundError") {
+        res.status(NO_DOCUMENT_FOUND_ERROR).send({ message: err.message });
+      } else {
+        res.status(DEFAULT_ERROR).send({ message: err.message });
+      }
+    });
+};
 
-module.exports = { getClothingItem, createClothingItem, deleteClothingItem };
+module.exports = {
+  getClothingItem,
+  createClothingItem,
+  deleteClothingItem,
+  likeClothingItem,
+  dislikeClothingItem
+};

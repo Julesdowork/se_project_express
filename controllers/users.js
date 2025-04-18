@@ -1,4 +1,9 @@
 const User = require("../models/user");
+const {
+  INVALID_DATA_ERROR,
+  NO_DOCUMENT_FOUND_ERROR,
+  DEFAULT_ERROR,
+} = require("../utils/errors");
 
 // GET /users
 const getUsers = (req, res) => {
@@ -8,11 +13,11 @@ const getUsers = (req, res) => {
     })
     .catch((err) => {
       console.error(err); // gives you info about the error
-      return res.status(500).send({ message: err.message });
+      return res.status(DEFAULT_ERROR).send({ message: err.message });
     });
 };
 
-// GET /users/:userId
+// GET /users/:id
 const getUser = (req, res) => {
   const { userId } = req.params;
 
@@ -24,11 +29,11 @@ const getUser = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "DocumentNotFoundError") {
-        res.status(404).send({ message: err.message });
+        res.status(NO_DOCUMENT_FOUND_ERROR).send({ message: err.message });
       } else if (err.name === "CastError") {
-        res.status(400).send({ message: err.message });
+        res.status(INVALID_DATA_ERROR).send({ message: err.message });
       } else {
-        res.status(500).send({ message: err.message });
+        res.status(DEFAULT_ERROR).send({ message: err.message });
       }
     });
 };
@@ -42,9 +47,9 @@ const createUser = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
-        res.status(400).send({ message: err.message });
+        res.status(INVALID_DATA_ERROR).send({ message: err.message });
       } else {
-        res.status(500).send({ message: err.message });
+        res.status(DEFAULT_ERROR).send({ message: err.message });
       }
     });
 };

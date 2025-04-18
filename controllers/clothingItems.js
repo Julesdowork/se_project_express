@@ -1,4 +1,9 @@
 const ClothingItem = require("../models/clothingItems");
+const {
+  INVALID_DATA_ERROR,
+  NO_DOCUMENT_FOUND_ERROR,
+  DEFAULT_ERROR,
+} = require("../utils/errors");
 
 // GET /items
 const getClothingItem = (req, res) => {
@@ -8,7 +13,7 @@ const getClothingItem = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).send({ message: err.message });
+      res.status(DEFAULT_ERROR).send({ message: err.message });
     });
 };
 
@@ -22,16 +27,15 @@ const createClothingItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
-        res.status(400).send({ message: err.message });
+        res.status(INVALID_DATA_ERROR).send({ message: err.message });
       } else {
-        res.status(500).send({ message: err.message });
+        res.status(DEFAULT_ERROR).send({ message: err.message });
       }
     });
 };
 
-// DELETE /items/:itemId
+// DELETE /items/:id
 const deleteClothingItem = (req, res) => {
-  console.log(req.params.id);
   ClothingItem.findByIdAndDelete(req.params.id)
     .orFail()
     .then((item) => {
@@ -40,13 +44,17 @@ const deleteClothingItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
-        res.status(400).send({ message: err.message });
+        res.status(INVALID_DATA_ERROR).send({ message: err.message });
       } else if (err.name === "DocumentNotFoundError") {
-        res.status(404).send({ message: err.message });
+        res.status(NO_DOCUMENT_FOUND_ERROR).send({ message: err.message });
       } else {
-        res.status(500).send({ message: err.message });
+        res.status(DEFAULT_ERROR).send({ message: err.message });
       }
     });
 };
+
+// PUT /items/:id/likes
+
+// DELETE /items/:id/likes
 
 module.exports = { getClothingItem, createClothingItem, deleteClothingItem };

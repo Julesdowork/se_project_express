@@ -1,7 +1,7 @@
 const ClothingItem = require("../models/clothingItems");
 const {
   INVALID_DATA_ERROR,
-  NO_DOCUMENT_FOUND_ERROR,
+  NOT_FOUND_ERROR,
   DEFAULT_ERROR,
 } = require("../utils/errors");
 
@@ -9,11 +9,13 @@ const {
 const getClothingItem = (req, res) => {
   ClothingItem.find({})
     .then((items) => {
-      res.status(200).send(items);
+      res.send(items);
     })
     .catch((err) => {
       console.error(err);
-      res.status(DEFAULT_ERROR).send({ message: err.message });
+      res
+        .status(DEFAULT_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -27,9 +29,13 @@ const createClothingItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
-        res.status(INVALID_DATA_ERROR).send({ message: err.message });
+        res
+          .status(INVALID_DATA_ERROR)
+          .send({ message: "The required data has been entered incorrectly." });
       } else {
-        res.status(DEFAULT_ERROR).send({ message: err.message });
+        res
+          .status(DEFAULT_ERROR)
+          .send({ message: "An error has occurred on the server." });
       }
     });
 };
@@ -39,16 +45,22 @@ const deleteClothingItem = (req, res) => {
   ClothingItem.findByIdAndDelete(req.params.itemId)
     .orFail()
     .then((item) => {
-      res.status(200).send({ data: item });
+      res.send({ data: item });
     })
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
-        res.status(INVALID_DATA_ERROR).send({ message: err.message });
+        res
+          .status(INVALID_DATA_ERROR)
+          .send({ message: "The required data has been entered incorrectly." });
       } else if (err.name === "DocumentNotFoundError") {
-        res.status(NO_DOCUMENT_FOUND_ERROR).send({ message: err.message });
+        res.status(NOT_FOUND_ERROR).send({
+          message: "There is no such clothing item with the given ID.",
+        });
       } else {
-        res.status(DEFAULT_ERROR).send({ message: err.message });
+        res
+          .status(DEFAULT_ERROR)
+          .send({ message: "An error has occurred on the server." });
       }
     });
 };
@@ -62,16 +74,22 @@ const likeClothingItem = (req, res) => {
   )
     .orFail()
     .then((item) => {
-      res.status(200).send({ item });
+      res.send({ item });
     })
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
-        res.status(INVALID_DATA_ERROR).send({ message: err.message });
+        res
+          .status(INVALID_DATA_ERROR)
+          .send({ message: "The required data has been entered incorrectly." });
       } else if (err.name === "DocumentNotFoundError") {
-        res.status(NO_DOCUMENT_FOUND_ERROR).send({ message: err.message });
+        res.status(NOT_FOUND_ERROR).send({
+          message: "There is no such clothing item with the given ID.",
+        });
       } else {
-        res.status(DEFAULT_ERROR).send({ message: err.message });
+        res
+          .status(DEFAULT_ERROR)
+          .send({ message: "An error has occurred on the server." });
       }
     });
 };
@@ -85,16 +103,24 @@ const dislikeClothingItem = (req, res) => {
   )
     .orFail()
     .then((item) => {
-      res.status(200).send({ item });
+      res.send({ item });
     })
     .catch((err) => {
       console.error(err);
       if (err.name === "CastError") {
-        res.status(INVALID_DATA_ERROR).send({ message: err.message });
+        res
+          .status(INVALID_DATA_ERROR)
+          .send({ message: "The required data has been entered incorrectly." });
       } else if (err.name === "DocumentNotFoundError") {
-        res.status(NO_DOCUMENT_FOUND_ERROR).send({ message: err.message });
+        res
+          .status(NOT_FOUND_ERROR)
+          .send({
+            message: "There is no such clothing item with the given ID.",
+          });
       } else {
-        res.status(DEFAULT_ERROR).send({ message: err.message });
+        res
+          .status(DEFAULT_ERROR)
+          .send({ message: "An error has occurred on the server." });
       }
     });
 };
@@ -104,5 +130,5 @@ module.exports = {
   createClothingItem,
   deleteClothingItem,
   likeClothingItem,
-  dislikeClothingItem
+  dislikeClothingItem,
 };

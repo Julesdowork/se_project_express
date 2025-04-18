@@ -1,20 +1,28 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const mainRouter = require("./routes/index");
-const { applyTimestamps } = require("./models/user");
 
 const { PORT = 3001 } = process.env;
 const app = express();
 
-mongoose.connect('mongodb://127.0.0.1:27017/wtwr_db')
+mongoose
+  .connect("mongodb://127.0.0.1:27017/wtwr_db")
   .then(() => {
     console.log("Connected to database");
   })
   .catch(console.error);
+
+app.use((req, res, next) => {
+  req.user = {
+    _id: "68004aa6d9a0fd213b9ef256",
+  };
+
+  next();
+});
 
 app.use(express.json());
 app.use("/", mainRouter);
 
 app.listen(PORT, () => {
   console.log(`App listening at port ${PORT}`);
-})
+});

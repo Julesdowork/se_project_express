@@ -43,10 +43,13 @@ const createClothingItem = (req, res) => {
 
 // DELETE /items/:id
 const deleteClothingItem = (req, res) => {
-  ClothingItem.findByIdAndDelete(req.params.itemId)
+  const { itemId } = req.params;
+  const owner = req.user._id;
+
+  ClothingItem.findByIdAndDelete(itemId)
     .orFail()
     .then((item) => {
-      if (item.owner._id.equals(req.user._id)) {
+      if (itemId !== owner) {
         const assertionError = new Error();
         assertionError.name = "AssertionError";
         return Promise.reject(assertionError);

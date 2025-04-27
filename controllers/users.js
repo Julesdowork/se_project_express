@@ -46,8 +46,8 @@ const createUser = (req, res) => {
     .hash(password, 10)
     .then((hash) => User.create({ name, avatar, email, password: hash }))
     .then((user) => {
-      const {password, ...userWithoutPassword} = user.toObject();
-      res.status(201).send(userWithoutPassword);
+      user.password = undefined;
+      res.status(201).send(user);
     })
     .catch((err) => {
       console.error(err);

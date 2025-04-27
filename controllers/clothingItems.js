@@ -45,6 +45,11 @@ const deleteClothingItem = (req, res) => {
   ClothingItem.findByIdAndDelete(req.params.itemId)
     .orFail()
     .then((item) => {
+      if (item.owner._id != req.user._id) {
+        const assertionError = new Error();
+        assertionError.name = "AssertionError";
+        return Promise.reject(assertionError);
+      }
       res.send({ data: item });
     })
     .catch((err) => {
@@ -57,6 +62,8 @@ const deleteClothingItem = (req, res) => {
         res.status(NOT_FOUND_ERROR).send({
           message: "There is no such clothing item with the given ID.",
         });
+      } else if (err.name === "AssertionError") {
+        res.status(403).send({ message: "Cannot delete someone else's item." });
       } else {
         res
           .status(DEFAULT_ERROR)
@@ -112,11 +119,9 @@ const dislikeClothingItem = (req, res) => {
           .status(INVALID_DATA_ERROR)
           .send({ message: "The required data has been entered incorrectly." });
       } else if (err.name === "DocumentNotFoundError") {
-        res
-          .status(NOT_FOUND_ERROR)
-          .send({
-            message: "There is no such clothing item with the given ID.",
-          });
+        res.status(NOT_FOUND_ERROR).send({
+          message: "There is no such clothing item with the given ID.",
+        });
       } else {
         res
           .status(DEFAULT_ERROR)

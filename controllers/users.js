@@ -1,29 +1,35 @@
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
 const User = require("../models/user");
 const {
   INVALID_DATA_ERROR,
+  UNAUTHORIZED_ERROR,
   NOT_FOUND_ERROR,
+  CONFLICT_ERROR,
   DEFAULT_ERROR,
 } = require("../utils/errors");
+const { JWT_SECRET } = require("../utils/config");
 
 // GET /users
-const getUsers = (req, res) => {
-  User.find({})
-    .then((users) => {
-      res.send(users);
-    })
-    .catch((err) => {
-      console.error(err); // gives you info about the error
-      return res
-        .status(DEFAULT_ERROR)
-        .send({ message: "An error has occurred on the server." });
-    });
-};
+// const getUsers = (req, res) => {
+//   User.find({})
+//     .then((users) => {
+//       res.send(users);
+//     })
+//     .catch((err) => {
+//       console.error(err); // gives you info about the error
+//       return res
+//         .status(DEFAULT_ERROR)
+//         .send({ message: "An error has occurred on the server." });
+//     });
+// };
 
-// GET /users/:id
-const getUser = (req, res) => {
-  const { userId } = req.params;
+// GET /users/me
+const getCurrentUser = (req, res) => {
+  const { _id } = req.user;
 
-  User.findById(userId)
+  User.findById(_id)
     .orFail()
     .then((user) => {
       res.send(user);
@@ -46,15 +52,80 @@ const getUser = (req, res) => {
     });
 };
 
-// POST /users
+// POST /signup
 const createUser = (req, res) => {
-  const { name, avatar } = req.body;
+  const { name, avatar, email, password } = req.body;
 
-  User.create({ name, avatar })
-    .then((user) => res.status(201).send({ data: user }))
+  bcrypt
+    .hash(password, 10)
+    .then((hash) => {
+      return User.create({ name, avatar, email, password: hash });
+    })
+    .then((user) => {
+      user.password = undefined;
+      res.status(201).send({ user });
+    })
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
+        res.status(INVALID_DATA_ERROR).send({
+          message: "The required data has been entered incorrectly.",
+        });
+      } else if (err.name === "MongoServerError") {
+        res
+          .status(CONFLICT_ERROR)
+          .send({ message: "User with that e-mail address already exists." });
+      } else {
+        res
+          .status(DEFAULT_ERROR)
+          .send({ message: "An error has occurred on the server." });
+      }
+    });
+};
+
+// POST /signin
+const login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+        expiresIn: "7d",
+      });
+
+      res.send({ token });
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err.name === "ValidationError") {
+        res.status(INVALID_DATA_ERROR).send({
+          message: "The required data has been entered incorrectly.",
+        });
+      }
+      res.status(UNAUTHORIZED_ERROR).send({ message: err.message });
+    });
+};
+
+// PATCH /users/me
+const updateMyProfile = (req, res) => {
+  const { name, avatar } = req.body;
+
+  User.findByIdAndUpdate(
+    req.user._id,
+    { name: name, avatar: avatar },
+    { new: true, runValidators: true }
+  )
+    .orFail()
+    .then((user) => {
+      res.send(user);
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err.name === "DocumentNotFoundError") {
+        res
+          .status(NOT_FOUND_ERROR)
+          .send({ message: "There is no such user with the given ID." });
+      } else if (err.name === "CastError") {
         res
           .status(INVALID_DATA_ERROR)
           .send({ message: "The required data has been entered incorrectly." });
@@ -66,4 +137,4 @@ const createUser = (req, res) => {
     });
 };
 
-module.exports = { getUsers, getUser, createUser };
+module.exports = { getCurrentUser, createUser, login, updateMyProfile };

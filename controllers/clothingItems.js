@@ -1,6 +1,7 @@
 const ClothingItem = require("../models/clothingItems");
 const {
   INVALID_DATA_ERROR,
+  FORBIDDEN_ERROR,
   NOT_FOUND_ERROR,
   DEFAULT_ERROR,
 } = require("../utils/errors");
@@ -63,7 +64,9 @@ const deleteClothingItem = (req, res) => {
           message: "There is no such clothing item with the given ID.",
         });
       } else if (err.name === "AssertionError") {
-        res.status(403).send({ message: "Cannot delete someone else's item." });
+        res
+          .status(FORBIDDEN_ERROR)
+          .send({ message: "Cannot delete someone else's item." });
       } else {
         res
           .status(DEFAULT_ERROR)

@@ -11,20 +11,6 @@ const {
 } = require("../utils/errors");
 const { JWT_SECRET } = require("../utils/config");
 
-// GET /users
-// const getUsers = (req, res) => {
-//   User.find({})
-//     .then((users) => {
-//       res.send(users);
-//     })
-//     .catch((err) => {
-//       console.error(err); // gives you info about the error
-//       return res
-//         .status(DEFAULT_ERROR)
-//         .send({ message: "An error has occurred on the server." });
-//     });
-// };
-
 // GET /users/me
 const getCurrentUser = (req, res) => {
   const { _id } = req.user;
@@ -60,8 +46,8 @@ const createUser = (req, res) => {
     .hash(password, 10)
     .then((hash) => User.create({ name, avatar, email, password: hash }))
     .then((user) => {
-      user.password = undefined;
-      res.status(201).send({ user });
+      const {password, ...userWithoutPassword} = user.toObject();
+      res.status(201).send(userWithoutPassword);
     })
     .catch((err) => {
       console.error(err);
@@ -99,8 +85,15 @@ const login = (req, res) => {
         res.status(INVALID_DATA_ERROR).send({
           message: "The required data has been entered incorrectly.",
         });
+      } else if (err.name === "UnauthorizedError") {
+        res
+          .status(UNAUTHORIZED_ERROR)
+          .send({ message: "Incorrect e-mail or password." });
+      } else {
+        res
+          .status(DEFAULT_ERROR)
+          .send({ message: "An error has occurred on the server." });
       }
-      res.status(UNAUTHORIZED_ERROR).send({ message: err.message });
     });
 };
 
@@ -123,7 +116,7 @@ const updateMyProfile = (req, res) => {
         res
           .status(NOT_FOUND_ERROR)
           .send({ message: "There is no such user with the given ID." });
-      } else if (err.name === "CastError") {
+      } else if (err.name === "ValidationError") {
         res
           .status(INVALID_DATA_ERROR)
           .send({ message: "The required data has been entered incorrectly." });

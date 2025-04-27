@@ -43,18 +43,18 @@ const createClothingItem = (req, res) => {
 
 // DELETE /items/:id
 const deleteClothingItem = (req, res) => {
-  const { itemId } = req.params;
-  const owner = req.user._id;
-
-  ClothingItem.findByIdAndDelete(itemId)
+  ClothingItem.findById(req.params.itemId)
     .orFail()
     .then((item) => {
-      if (itemId !== owner) {
-        const assertionError = new Error();
-        assertionError.name = "AssertionError";
-        return Promise.reject(assertionError);
+      if (String(item.owner) !== req.user._id) {
+        res
+          .status(FORBIDDEN_ERROR)
+          .send({ message: "Cannot delete someone else's item." });
       }
-      return res.send({ data: item });
+
+      item
+        .deleteOne()
+        .then(() => res.status(200).send({ message: "Successfully deleted." }));
     })
     .catch((err) => {
       console.error(err);
@@ -66,10 +66,6 @@ const deleteClothingItem = (req, res) => {
         res.status(NOT_FOUND_ERROR).send({
           message: "There is no such clothing item with the given ID.",
         });
-      } else if (err.name === "AssertionError") {
-        res
-          .status(FORBIDDEN_ERROR)
-          .send({ message: "Cannot delete someone else's item." });
       } else {
         res
           .status(DEFAULT_ERROR)

@@ -46,12 +46,12 @@ const deleteClothingItem = (req, res) => {
   ClothingItem.findByIdAndDelete(req.params.itemId)
     .orFail()
     .then((item) => {
-      if (item.owner._id != req.user._id) {
+      if (item.owner._id.equals(req.user._id)) {
         const assertionError = new Error();
         assertionError.name = "AssertionError";
         return Promise.reject(assertionError);
       }
-      res.send({ data: item });
+      return res.send({ data: item });
     })
     .catch((err) => {
       console.error(err);

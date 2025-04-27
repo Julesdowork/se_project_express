@@ -112,7 +112,7 @@ const updateMyProfile = (req, res) => {
 
   User.findByIdAndUpdate(
     req.user._id,
-    { name: name, avatar: avatar },
+    { name, avatar },
     { new: true, runValidators: true }
   )
     .orFail()

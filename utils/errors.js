@@ -13,14 +13,6 @@ class ValidationError extends Error {
   }
 }
 
-class UnauthorizedError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "UnauthorizedError";
-    this.statusCode = 401;
-  }
-}
-
 module.exports = {
   INVALID_DATA_ERROR,
   UNAUTHORIZED_ERROR,
@@ -29,5 +21,4 @@ module.exports = {
   CONFLICT_ERROR,
   DEFAULT_ERROR,
   ValidationError,
-  UnauthorizedError,
 };

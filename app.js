@@ -5,6 +5,7 @@ const { errors } = require("celebrate");
 
 const mainRouter = require("./routes/index");
 const errorHandler = require("./middlewares/error-handler");
+const { requestLogger, errorLogger } = require("./middlewares/logger");
 
 const { PORT = 3001 } = process.env;
 const app = express();
@@ -18,7 +19,9 @@ mongoose
 
 app.use(express.json());
 app.use(cors());
+app.use(requestLogger); // enable the request logger
 app.use("/", mainRouter); // my routes
+app.use(errorLogger); // enable the error logger
 app.use(errors()); // celebrate error handler
 app.use(errorHandler); // my centralized error handler
 

@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
 
-const { ValidationError } = require("../utils/errors");
+const { BadRequestError } = require("../errors/bad-request-err");
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -44,7 +44,7 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
   password
 ) {
   if (!email || !password) {
-    return Promise.reject(new ValidationError());
+    return Promise.reject(new BadRequestError("Missing e-mail or password."));
   }
 
   return this.findOne({ email })

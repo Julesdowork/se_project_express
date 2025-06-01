@@ -26,5 +26,6 @@ module.exports = {
       "error",
       { props: true, ignorePropertyModificationsFor: ["user", "req"] },
     ],
+    "no-unused-vars": ["error", { argsIgnorePattern: "next" }],
   },
 };

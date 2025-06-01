@@ -1,55 +1,42 @@
 const ClothingItem = require("../models/clothingItems");
-const {
-  INVALID_DATA_ERROR,
-  FORBIDDEN_ERROR,
-  NOT_FOUND_ERROR,
-  DEFAULT_ERROR,
-} = require("../utils/errors");
+const { BadRequestError } = require("../errors/bad-request-err");
+const { ForbiddenError } = require("../errors/forbidden-err");
+const { NotFoundError } = require("../errors/not-found-err");
 
 // GET /items
-const getClothingItem = (req, res) => {
+const getClothingItem = (req, res, next) => {
   ClothingItem.find({})
     .then((items) => {
       res.send(items);
     })
-    .catch((err) => {
-      console.error(err);
-      res
-        .status(DEFAULT_ERROR)
-        .send({ message: "An error has occurred on the server." });
-    });
+    .catch(next);
 };
 
 // POST /items
-const createClothingItem = (req, res) => {
+const createClothingItem = (req, res, next) => {
   const owner = req.user._id;
   const { name, weather, imageUrl } = req.body;
 
   ClothingItem.create({ name, weather, imageUrl, owner })
     .then((item) => res.status(201).send(item))
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
-        res
-          .status(INVALID_DATA_ERROR)
-          .send({ message: "The required data has been entered incorrectly." });
+        next(
+          new BadRequestError("The required data has been entered incorrectly.")
+        );
       } else {
-        res
-          .status(DEFAULT_ERROR)
-          .send({ message: "An error has occurred on the server." });
+        next(err);
       }
     });
 };
 
 // DELETE /items/:id
-const deleteClothingItem = (req, res) => {
+const deleteClothingItem = (req, res, next) => {
   ClothingItem.findById(req.params.itemId)
     .orFail()
     .then((item) => {
       if (String(item.owner) !== req.user._id) {
-        res
-          .status(FORBIDDEN_ERROR)
-          .send({ message: "Cannot delete someone else's item." });
+        throw new ForbiddenError("Cannot delete someone else's item.");
       }
 
       item
@@ -57,25 +44,22 @@ const deleteClothingItem = (req, res) => {
         .then(() => res.status(200).send({ message: "Successfully deleted." }));
     })
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
-        res
-          .status(INVALID_DATA_ERROR)
-          .send({ message: "The required data has been entered incorrectly." });
+        next(
+          new BadRequestError("The required data has been entered incorrectly.")
+        );
       } else if (err.name === "DocumentNotFoundError") {
-        res.status(NOT_FOUND_ERROR).send({
-          message: "There is no such clothing item with the given ID.",
-        });
+        next(
+          new NotFoundError("There is no such clothing item with the given ID.")
+        );
       } else {
-        res
-          .status(DEFAULT_ERROR)
-          .send({ message: "An error has occurred on the server." });
+        next(err);
       }
     });
 };
 
 // PUT /items/:id/likes
-const likeClothingItem = (req, res) => {
+const likeClothingItem = (req, res, next) => {
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     { $addToSet: { likes: req.user._id } },
@@ -86,25 +70,22 @@ const likeClothingItem = (req, res) => {
       res.send({ item });
     })
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
-        res
-          .status(INVALID_DATA_ERROR)
-          .send({ message: "The required data has been entered incorrectly." });
+        next(
+          new BadRequestError("The required data has been entered incorrectly.")
+        );
       } else if (err.name === "DocumentNotFoundError") {
-        res.status(NOT_FOUND_ERROR).send({
-          message: "There is no such clothing item with the given ID.",
-        });
+        next(
+          new NotFoundError("There is no such clothing item with the given ID.")
+        );
       } else {
-        res
-          .status(DEFAULT_ERROR)
-          .send({ message: "An error has occurred on the server." });
+        next(err);
       }
     });
 };
 
 // DELETE /items/:id/likes
-const dislikeClothingItem = (req, res) => {
+const dislikeClothingItem = (req, res, next) => {
   ClothingItem.findByIdAndUpdate(
     req.params.itemId,
     { $pull: { likes: req.user._id } },
@@ -115,19 +96,16 @@ const dislikeClothingItem = (req, res) => {
       res.send({ item });
     })
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
-        res
-          .status(INVALID_DATA_ERROR)
-          .send({ message: "The required data has been entered incorrectly." });
+        next(
+          new BadRequestError("The required data has been entered incorrectly.")
+        );
       } else if (err.name === "DocumentNotFoundError") {
-        res.status(NOT_FOUND_ERROR).send({
-          message: "There is no such clothing item with the given ID.",
-        });
+        next(
+          new NotFoundError("There is no such clothing item with the given ID.")
+        );
       } else {
-        res
-          .status(DEFAULT_ERROR)
-          .send({ message: "An error has occurred on the server." });
+        next(err);
       }
     });
 };

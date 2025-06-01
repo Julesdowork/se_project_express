@@ -2,17 +2,14 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
-const {
-  INVALID_DATA_ERROR,
-  UNAUTHORIZED_ERROR,
-  NOT_FOUND_ERROR,
-  CONFLICT_ERROR,
-  DEFAULT_ERROR,
-} = require("../utils/errors");
+const { BadRequestError } = require("../errors/bad-request-err");
+const { UnauthorizedError } = require("../errors/unauthorized-err");
+const { NotFoundError } = require("../errors/not-found-err");
+const { ConflictError } = require("../errors/conflict-err");
 const { JWT_SECRET } = require("../utils/config");
 
 // GET /users/me
-const getCurrentUser = (req, res) => {
+const getCurrentUser = (req, res, next) => {
   const { _id } = req.user;
 
   User.findById(_id)
@@ -21,25 +18,20 @@ const getCurrentUser = (req, res) => {
       res.send(user);
     })
     .catch((err) => {
-      console.error(err);
-      if (err.name === "DocumentNotFoundError") {
-        res
-          .status(NOT_FOUND_ERROR)
-          .send({ message: "There is no such user with the given ID." });
-      } else if (err.name === "CastError") {
-        res
-          .status(INVALID_DATA_ERROR)
-          .send({ message: "The required data has been entered incorrectly." });
+      if (err.name === "ValidationError") {
+        next(
+          new BadRequestError("The required data has been entered incorrectly.")
+        );
+      } else if (err.name === "DocumentNotFoundError") {
+        next(new NotFoundError("There is no such user with the given ID."));
       } else {
-        res
-          .status(DEFAULT_ERROR)
-          .send({ message: "An error has occurred on the server." });
+        next(err);
       }
     });
 };
 
 // POST /signup
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
 
   bcrypt
@@ -50,25 +42,22 @@ const createUser = (req, res) => {
       res.status(201).send(user);
     })
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
-        res.status(INVALID_DATA_ERROR).send({
-          message: "The required data has been entered incorrectly.",
-        });
+        next(
+          new BadRequestError("The required data has been entered incorrectly.")
+        );
       } else if (err.name === "MongoServerError") {
-        res
-          .status(CONFLICT_ERROR)
-          .send({ message: "User with that e-mail address already exists." });
+        next(
+          new ConflictError("A user with that e-mail address already exists.")
+        );
       } else {
-        res
-          .status(DEFAULT_ERROR)
-          .send({ message: "An error has occurred on the server." });
+        next(err);
       }
     });
 };
 
 // POST /signin
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -80,25 +69,20 @@ const login = (req, res) => {
       res.send({ user, token });
     })
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
-        res.status(INVALID_DATA_ERROR).send({
-          message: "The required data has been entered incorrectly.",
-        });
+        next(
+          new BadRequestError("The required data has been entered incorrectly.")
+        );
       } else if (err.name === "UnauthorizedError") {
-        res
-          .status(UNAUTHORIZED_ERROR)
-          .send({ message: "Incorrect e-mail or password." });
+        next(new UnauthorizedError("Incorrect e-mail or password."));
       } else {
-        res
-          .status(DEFAULT_ERROR)
-          .send({ message: "An error has occurred on the server." });
+        next(err);
       }
     });
 };
 
 // PATCH /users/me
-const updateMyProfile = (req, res) => {
+const updateMyProfile = (req, res, next) => {
   const { name, avatar } = req.body;
 
   User.findByIdAndUpdate(
@@ -111,19 +95,14 @@ const updateMyProfile = (req, res) => {
       res.send(user);
     })
     .catch((err) => {
-      console.error(err);
-      if (err.name === "DocumentNotFoundError") {
-        res
-          .status(NOT_FOUND_ERROR)
-          .send({ message: "There is no such user with the given ID." });
-      } else if (err.name === "ValidationError") {
-        res
-          .status(INVALID_DATA_ERROR)
-          .send({ message: "The required data has been entered incorrectly." });
+      if (err.name === "ValidationError") {
+        next(
+          new BadRequestError("The required data has been entered incorrectly.")
+        );
+      } else if (err.name === "DocumentNotFoundError") {
+        next(new NotFoundError("There is no such user with the given ID."));
       } else {
-        res
-          .status(DEFAULT_ERROR)
-          .send({ message: "An error has occurred on the server." });
+        next(err);
       }
     });
 };

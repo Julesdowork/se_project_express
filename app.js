@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const { errors } = require("celebrate");
 
 const mainRouter = require("./routes/index");
 const errorHandler = require("./middlewares/error-handler");
@@ -17,8 +18,9 @@ mongoose
 
 app.use(express.json());
 app.use(cors());
-app.use("/", mainRouter);
-app.use(errorHandler);
+app.use("/", mainRouter); // my routes
+app.use(errors()); // celebrate error handler
+app.use(errorHandler); // my centralized error handler
 
 app.listen(PORT, () => {
   console.log(`App listening at port ${PORT}`);

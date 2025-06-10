@@ -66,7 +66,7 @@ const login = (req, res, next) => {
         expiresIn: "7d",
       });
 
-      res.send({ user, token });
+      res.send({ token });
     })
     .catch((err) => {
       if (err.name === "ValidationError") {

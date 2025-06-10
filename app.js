@@ -4,10 +4,12 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const { errors } = require("celebrate");
+const helmet = require("helmet");
 
 const mainRouter = require("./routes/index");
 const errorHandler = require("./middlewares/error-handler");
 const { requestLogger, errorLogger } = require("./middlewares/logger");
+const { limiter } = require("./middlewares/limiter");
 
 const { PORT = 3001 } = process.env;
 const app = express();
@@ -21,6 +23,8 @@ mongoose
 
 app.use(express.json());
 app.use(cors());
+app.use(limiter); // limits requests to 100 per 15 mins
+app.use(helmet()); // sets a bunch of security headers
 app.use(requestLogger); // enable the request logger
 app.use("/", mainRouter); // my routes
 app.use(errorLogger); // enable the error logger

@@ -19,7 +19,7 @@ router.use("/crash-test", () => {
 });
 router.use("/signin", validateUserLoginBody, login);
 router.use("/signup", validateUserRegistrationBody, createUser);
-router.use((req, res) => {
+router.use(() => {
   throw new NotFoundError("The requested resource could not be found.");
 });
 
